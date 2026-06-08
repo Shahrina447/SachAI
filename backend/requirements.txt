@@ -1,0 +1,21 @@
+# ── SachAI Backend Requirements ───────────────────────────────────────────────
+# Install CPU-only PyTorch FIRST (smaller download, no CUDA overhead):
+#   pip install torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+#
+# Then install the rest:
+#   pip install -r requirements.txt
+#
+# Or with uv:
+#   uv add torch --index-url https://download.pytorch.org/whl/cpu
+#   uv add fastapi "uvicorn[standard]" transformers pydantic aiosqlite python-dotenv scikit-learn numpy
+
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+transformers==4.40.0
+# torch CPU build — install separately with the index URL above
+# torch==2.2.0+cpu
+pydantic==2.7.0
+aiosqlite==0.20.0
+python-dotenv==1.0.0
+scikit-learn==1.4.0
+numpy==1.26.0

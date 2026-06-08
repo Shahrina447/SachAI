@@ -1,0 +1,192 @@
+# ============================================================
+#  SachAI — Urdu Fake News Detection System
+#  .gitignore
+# ============================================================
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+.installed.cfg
+lib/
+lib64/
+MANIFEST
+
+# ── Virtual Environments ──────────────────────────────────────
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+/tmp/sachai_env/
+
+# ── Environment Variables & Secrets ──────────────────────────
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.staging
+*.env
+secrets.json
+secrets.yaml
+credentials.json
+config.secret.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+
+# ── ML Model Weights (large binary files) ────────────────────
+backend/saved_model/
+ml/results/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.pkl
+*.pickle
+# Exception: keep config files inside saved_model
+!backend/saved_model/config.json
+!backend/saved_model/tokenizer_config.json
+!backend/saved_model/tokenizer.json
+!backend/saved_model/special_tokens_map.json
+!backend/saved_model/sentencepiece.bpe.model
+
+# ── HuggingFace Cache ─────────────────────────────────────────
+~/.cache/huggingface/
+.cache/
+huggingface_cache/
+
+# ── Training Artifacts ────────────────────────────────────────
+ml/results/
+ml/checkpoint-*/
+runs/
+wandb/
+tensorboard_logs/
+lightning_logs/
+*.log
+training_results.png
+class_distribution.png
+
+# ── Database ──────────────────────────────────────────────────
+backend/predictions.db
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Node.js / Next.js ─────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+frontend/.vercel/
+frontend/coverage/
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+*.tsbuildinfo
+
+# ── Next.js build output ─────────────────────────────────────
+.next/
+out/
+
+# ── OS Files ─────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── IDE / Editor ─────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+.cursor/
+
+# Keep shared VSCode workspace config (tasks, etc.)
+!.vscode/tasks.json
+
+# ── Jupyter Notebooks ────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Coverage & Testing ───────────────────────────────────────
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+test-results/
+test-output/
+
+# ── Logs ─────────────────────────────────────────────────────
+logs/
+*.log
+log/
+npm-debug.log
+yarn-error.log
+pip-log.txt
+
+# ── Temporary Files ──────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+tmp/
+temp/
+
+# ── Distribution / Packaging ─────────────────────────────────
+*.tar.gz
+*.zip
+*.whl
+
+# ── uvicorn / gunicorn process files ─────────────────────────
+*.pid
+.pid
+
+# ── Documentation build ──────────────────────────────────────
+docs/_build/
+site/
