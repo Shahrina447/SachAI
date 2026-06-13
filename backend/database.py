@@ -1,7 +1,11 @@
+import os
 import aiosqlite
 from typing import List
+from dotenv import load_dotenv
 
-DB_PATH = "./predictions.db"
+load_dotenv()
+
+DB_PATH = os.getenv("DB_PATH", "./predictions.db")
 
 
 async def init_db():

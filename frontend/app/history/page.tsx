@@ -63,7 +63,7 @@ export default function HistoryPage() {
       await clearHistory()
       setItems([])
     } catch {
-      // silently ignore
+   
     } finally {
       setClearing(false)
     }

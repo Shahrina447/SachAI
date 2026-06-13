@@ -11,40 +11,6 @@ const SAMPLES: Record<number, string> = {
   3: 'موسمیاتی تبدیلیوں کے باعث پاکستان میں موسمِ گرما کا دورانیہ بڑھنے کا امکان ہے، محکمہ موسمیات نے انتباہ جاری کر دیا ہے۔',
 }
 
-// ── Frontend-side demo heuristic (API fallback) ───────────────────────────────
-function runDemoHeuristic(text: string): PredictResponse {
-  const fakeKeywords = ['دعویٰ', 'راز', 'چھپا', 'مکمل طور پر', 'صرف', 'حیرت انگیز', 'معجزہ']
-  let score = fakeKeywords.filter((kw) => text.includes(kw)).length * 15
-  score += text.includes('!') ? 10 : 0
-  score += text.length < 60 ? 10 : 0
-  const credibility = Math.max(15, Math.min(96, 95 - score + Math.floor(Math.random() * 8)))
-  const fakeConf = parseFloat(((100 - credibility) / 100).toFixed(3))
-  const realConf = parseFloat((credibility / 100).toFixed(3))
-  const prediction: 'REAL' | 'MIXED' | 'FAKE' =
-    credibility >= 75 ? 'REAL' : credibility >= 45 ? 'MIXED' : 'FAKE'
-  const noise = () => parseFloat((Math.random() * 0.16 - 0.08).toFixed(3))
-
-  return {
-    prediction,
-    confidence: Math.max(fakeConf, realConf),
-    confidence_real: realConf,
-    confidence_fake: fakeConf,
-    linguistic_score: Math.max(0.1, Math.min(0.98, realConf + noise())),
-    source_score: Math.max(0.1, Math.min(0.98, realConf + noise())),
-    sentiment_score: Math.max(0.1, Math.min(0.98, realConf + noise())),
-    fact_score: Math.max(0.1, Math.min(0.98, realConf + noise())),
-    verdict_text:
-      prediction === 'REAL'
-        ? '✓ Authentic linguistic patterns detected. Content appears credible.'
-        : prediction === 'MIXED'
-        ? '⚠ Mixed signals. Cross-check with verified sources.'
-        : '✗ Misinformation indicators: sensational language and unverified claims.',
-    prediction_id: Math.random().toString(36).slice(2),
-    timestamp: new Date().toISOString(),
-    demo_mode: true,
-  }
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function badgeClass(prediction: string) {
   if (prediction === 'REAL') return 'badge-real'
@@ -119,11 +85,11 @@ export default function DetectorSection() {
 
     if (apiResult.status === 'fulfilled') {
       setResult(apiResult.value)
+      setState('result')
     } else {
-      // API unreachable — use frontend heuristic
-      setResult(runDemoHeuristic(text))
+      setError('Backend unreachable. Please ensure the server is running on port 8000.')
+      setState('idle')
     }
-    setState('result')
   }
 
   const handleReset = () => {
@@ -218,13 +184,6 @@ export default function DetectorSection() {
           {/* ── RESULT STATE ── */}
           {state === 'result' && result && (
             <div className="space-y-8">
-              {/* Demo mode banner */}
-              {result.demo_mode && (
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  Demo mode — connect backend for real xlm-RoBERTa inference.
-                </div>
-              )}
 
               {/* Top row: meter + verdict */}
               <div className="flex flex-col sm:flex-row items-center gap-8">

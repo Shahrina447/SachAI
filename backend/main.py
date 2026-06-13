@@ -1,17 +1,24 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from schemas import PredictRequest, PredictResponse, HistoryItem
 from model import load_model, predict
 from database import init_db, save_prediction, get_history, delete_prediction, clear_all_predictions
 from preprocess import clean_urdu_text
 
+_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+ALLOWED_ORIGINS = [o.strip() for o in _origins_env.split(",")]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    load_model()  # loads on CPU (or skips in DEMO_MODE)
+    load_model()  # loads on CPU
     yield
 
 
@@ -24,10 +31,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

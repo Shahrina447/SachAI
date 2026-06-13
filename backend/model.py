@@ -1,15 +1,16 @@
+import os
 import torch
-import numpy as np
 import random
 import uuid
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ─── CPU ONLY — never cuda ────────────────────────────────────────────────────
-DEVICE = torch.device("cpu")  # hardcoded — never "cuda"
+DEVICE = torch.device("cpu")
 
-# Set DEMO_MODE = False after you have trained and saved the model to ./saved_model/
-DEMO_MODE = True
-MODEL_PATH = "./saved_model"
+MODEL_PATH = os.getenv("MODEL_PATH", "./saved_model")
 
 # Global model / tokenizer — loaded once at startup
 _model = None
@@ -17,82 +18,22 @@ _tokenizer = None
 
 
 def load_model():
-    """Load the fine-tuned model onto CPU. Skipped when DEMO_MODE=True."""
+    """Load the fine-tuned xlm-RoBERTa model onto CPU."""
     global _model, _tokenizer
-    if not DEMO_MODE:
-        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-        _tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-        _model = AutoModelForSequenceClassification.from_pretrained(
-            MODEL_PATH,
-            torch_dtype=torch.float32,  # float32 ONLY — never float16 on CPU
-        )
-        _model.to(DEVICE)  # stays on cpu
-        _model.eval()
-        print(f"[SachAI] Model loaded on {DEVICE}")
-    else:
-        print("[SachAI] Running in DEMO_MODE — no model weights required")
-
-
-def _noise() -> float:
-    return round(random.uniform(-0.08, 0.08), 3)
+    _tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+    _model = AutoModelForSequenceClassification.from_pretrained(
+        MODEL_PATH,
+        torch_dtype=torch.float32,  # float32 ONLY — never float16 on CPU
+    )
+    _model.to(DEVICE)
+    _model.eval()
+    print(f"[SachAI] Model loaded from '{MODEL_PATH}' on {DEVICE}")
 
 
 def predict(text: str) -> dict:
-    """
-    Return a prediction dict.
-
-    In DEMO_MODE a rule-based heuristic is used so the app runs without
-    trained weights. Set DEMO_MODE=False and place trained weights in
-    ./saved_model/ to use the real xlm-roberta-base model.
-    """
-    if DEMO_MODE:
-        fake_keywords = [
-            "دعویٰ", "راز", "چھپا", "مکمل طور پر", "صرف",
-            "حیرت انگیز", "معجزہ",
-        ]
-        score = sum(15 for kw in fake_keywords if kw in text)
-        score += 10 if "!" in text else 0
-        score += 10 if len(text) < 60 else 0
-        credibility = max(15, min(96, 95 - score + random.randint(-4, 8)))
-        fake_conf = round((100 - credibility) / 100, 3)
-        real_conf = round(credibility / 100, 3)
-
-        if credibility >= 75:
-            prediction = "REAL"
-            verdict = (
-                "✓ This content shows characteristics of legitimate journalism. "
-                "Linguistic patterns and tone appear authentic."
-            )
-        elif credibility >= 45:
-            prediction = "MIXED"
-            verdict = (
-                "⚠ This content has some red flags. "
-                "Cross-check with verified sources before sharing."
-            )
-        else:
-            prediction = "FAKE"
-            verdict = (
-                "✗ Strong indicators of misinformation: sensational language, "
-                "unverified claims, suspicious phrasing."
-            )
-
-        return {
-            "prediction": prediction,
-            "confidence": max(fake_conf, real_conf),
-            "confidence_real": real_conf,
-            "confidence_fake": fake_conf,
-            "linguistic_score": round(max(0.1, min(0.98, real_conf + _noise())), 3),
-            "source_score":     round(max(0.1, min(0.98, real_conf + _noise())), 3),
-            "sentiment_score":  round(max(0.1, min(0.98, real_conf + _noise())), 3),
-            "fact_score":       round(max(0.1, min(0.98, real_conf + _noise())), 3),
-            "verdict_text": verdict,
-            "prediction_id": str(uuid.uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
-            "demo_mode": True,
-        }
-
-    # ── Real model inference — CPU only ────────────────────────────────────────
+    """Run xlm-RoBERTa inference on CPU and return a prediction dict."""
     from preprocess import clean_urdu_text
 
     cleaned = clean_urdu_text(text)
@@ -103,7 +44,7 @@ def predict(text: str) -> dict:
         padding=True,
         max_length=128,
     )
-    # All tensors stay on CPU — no .to("cuda")
+
     with torch.no_grad():
         outputs = _model(**inputs)
 
@@ -113,7 +54,7 @@ def predict(text: str) -> dict:
     prediction = "REAL" if real_conf > fake_conf else "FAKE"
     base = real_conf if prediction == "REAL" else fake_conf
 
-    def _small_noise():
+    def _noise():
         return round(random.uniform(-0.05, 0.05), 3)
 
     if real_conf > 0.75:
@@ -131,12 +72,11 @@ def predict(text: str) -> dict:
         "confidence": max(real_conf, fake_conf),
         "confidence_real": real_conf,
         "confidence_fake": fake_conf,
-        "linguistic_score": round(max(0.1, min(0.98, base + _small_noise())), 3),
-        "source_score":     round(max(0.1, min(0.98, base + _small_noise())), 3),
-        "sentiment_score":  round(max(0.1, min(0.98, base + _small_noise())), 3),
-        "fact_score":       round(max(0.1, min(0.98, base + _small_noise())), 3),
+        "linguistic_score": round(max(0.1, min(0.98, base + _noise())), 3),
+        "source_score":     round(max(0.1, min(0.98, base + _noise())), 3),
+        "sentiment_score":  round(max(0.1, min(0.98, base + _noise())), 3),
+        "fact_score":       round(max(0.1, min(0.98, base + _noise())), 3),
         "verdict_text": verdict,
         "prediction_id": str(uuid.uuid4()),
         "timestamp": datetime.utcnow().isoformat(),
-        "demo_mode": False,
     }

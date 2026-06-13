@@ -436,12 +436,6 @@ For training speed, use Google Colab's free T4 GPU tier with `fp16=True`.
 
 ---
 
-## Team
-
-| Role | Name | Responsibilities |
-|---|---|---|
-| ML Engineer | Abdullah | xlm-RoBERTa fine-tuning, training pipeline, model inference, preprocessing |
-| Full-Stack Engineer | Sharina Khan | FastAPI backend, Next.js frontend, UI/UX, prediction history, dark theme |
 
 ---
 

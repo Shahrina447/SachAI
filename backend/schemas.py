@@ -18,7 +18,6 @@ class PredictResponse(BaseModel):
     verdict_text: str
     prediction_id: str
     timestamp: str
-    demo_mode: Optional[bool] = False
 
 
 class HistoryItem(BaseModel):
