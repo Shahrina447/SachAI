@@ -1,3 +1,4 @@
+# AI / editor tool files
 .claude
 .code-review-graph
 .cursor
@@ -8,9 +9,38 @@
 AGENTS.md
 CLAUDE.md
 GEMINI.md
-.agents 
+.agents
 .codex
 .vscode
 .kiro
-.venv
-.vscode
+
+# Python environments
+.venv/
+venv/
+**/venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+
+# ML model files (too large for git)
+saved_model/
+*.safetensors
+*.pt
+*.bin
+*.ckpt
+*.onnx
+*.h5
+
+# Databases
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
