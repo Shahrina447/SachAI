@@ -207,6 +207,26 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 The trained model weights (`model.safetensors`) are not stored in this repository due to file size (1.1 GB). Place the trained model files in `backend/saved_model/` before running.
 
+
+
+The model was evaluated on a balanced held-out test set of 1000 samples (500 FAKE + 500 TRUE) from the combined dataset:
+
+| Metric | Value |
+|---|---|
+| Accuracy | **94.40%** |
+| Precision | 0.9784 |
+| Recall | 0.9080 |
+| F1 Score | 0.9419 |
+
+**Confusion Matrix (FAKE = positive class):**
+
+| | Predicted FAKE | Predicted TRUE |
+|---|---|---|
+| Actual FAKE | 454 (TP) | 46 (FN) |
+| Actual TRUE | 10 (FP) | 490 (TN) |
+
+The model correctly identifies 90.8% of fake news with very few false alarms on real news (precision 97.8%). The model was retrained on a combined dataset of Ax-to-Grind Urdu and Hook & Bait Urdu to improve cross-domain generalization, improving accuracy from 74.5% (single dataset) to 94.4%.
+
 ---
 
 ## API Reference

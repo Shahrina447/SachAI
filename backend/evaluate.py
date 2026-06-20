@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
-MODEL_PATH = os.getenv("MODEL_PATH", "./saved_model")
+MODEL_PATH = os.getenv("MODEL_PATH", os.path.join(os.path.dirname(__file__), "saved_model"))
 REAL_THRESHOLD = float(os.getenv("REAL_THRESHOLD", "0.55"))
 TEMPERATURE = float(os.getenv("TEMPERATURE", "1.5"))
 DEVICE = torch.device("cpu")
@@ -62,17 +62,20 @@ def predict_text(text: str, tokenizer, model) -> tuple[str, float, float]:
 def normalize_label(label: str) -> str:
     """Normalize label to REAL or FAKE regardless of input format."""
     label = label.strip().upper()
-    if label in ("1", "REAL"):
+    if label in ("1", "REAL", "TRUE"):
         return "REAL"
     elif label in ("0", "FAKE"):
         return "FAKE"
     else:
-        raise ValueError(f"Unknown label: '{label}'. Expected REAL/FAKE or 1/0.")
+        raise ValueError(f"Unknown label: '{label}'. Expected FAKE/TRUE, FAKE/REAL, or 0/1.")
 
 
-def evaluate(file_path: str, text_col: str, label_col: str):
+def evaluate(file_path: str, text_col: str, label_col: str, sample: int = None, seed: int = 42):
+    import random
+    random.seed(seed)
+
     # ── Load CSV ──────────────────────────────────────────────────────────────
-    rows = []
+    all_rows = []
     with open(file_path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -80,14 +83,23 @@ def evaluate(file_path: str, text_col: str, label_col: str):
                 print(f"ERROR: Columns '{text_col}' or '{label_col}' not found.")
                 print(f"Available columns: {list(row.keys())}")
                 sys.exit(1)
-            rows.append(row)
+            label = row[label_col].strip().upper()
+            if label not in ("FAKE", "TRUE", "REAL", "0", "1"):
+                continue  # skip blank/header rows
+            all_rows.append(row)
 
-    total = len(rows)
-    print(f"Loaded {total} samples from '{file_path}'\n")
+    # ── Balanced sampling ─────────────────────────────────────────────────────
+    if sample:
+        fake_rows = [r for r in all_rows if r[label_col].strip().upper() in ("FAKE", "0")]
+        true_rows = [r for r in all_rows if r[label_col].strip().upper() in ("TRUE", "REAL", "1")]
 
-    if total == 0:
-        print("ERROR: CSV file is empty.")
-        sys.exit(1)
+        n = min(sample, len(fake_rows), len(true_rows))
+        rows = random.sample(fake_rows, n) + random.sample(true_rows, n)
+        random.shuffle(rows)
+        print(f"Sampled {n} FAKE + {n} TRUE = {len(rows)} rows (balanced, seed={seed})\n")
+    else:
+        rows = all_rows
+        print(f"Loaded all {len(rows)} samples from '{file_path}'\n")
 
     # ── Load model ────────────────────────────────────────────────────────────
     tokenizer, model = load_model()
@@ -169,13 +181,16 @@ def evaluate(file_path: str, text_col: str, label_col: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate SachAI model on a test CSV")
-    parser.add_argument("--file",      required=True,  help="Path to test CSV file")
-    parser.add_argument("--text-col",  default="text",  help="Column name for text (default: text)")
-    parser.add_argument("--label-col", default="label", help="Column name for label (default: label)")
+    parser.add_argument("--file",      required=True,   help="Path to test CSV file")
+    parser.add_argument("--text-col",  default="text",   help="Column name for text (default: text)")
+    parser.add_argument("--label-col", default="label",  help="Column name for label (default: label)")
+    parser.add_argument("--sample",    type=int, default=None,
+                        help="Randomly sample N rows per class (balanced). E.g. --sample 100 = 100 FAKE + 100 TRUE")
+    parser.add_argument("--seed",      type=int, default=42, help="Random seed (default: 42)")
     args = parser.parse_args()
 
     if not os.path.exists(args.file):
         print(f"ERROR: File not found: {args.file}")
         sys.exit(1)
 
-    evaluate(args.file, args.text_col, args.label_col)
+    evaluate(args.file, args.text_col, args.label_col, args.sample, args.seed)
