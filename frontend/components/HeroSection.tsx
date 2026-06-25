@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowDown, Sparkles } from 'lucide-react'
+import { ArrowDown, Sparkles, Zap, Shield } from 'lucide-react'
 
 const TYPING_TEXTS = [
   'خبروں کی سچائی جانیں',
@@ -9,77 +9,85 @@ const TYPING_TEXTS = [
   'AI سے سچ دریافت کریں',
 ]
 
-export default function HeroSection() {
-  const [typedIndex, setTypedIndex] = useState(0)
+const STATS = [
+  { value: 'xlm-RoBERTa', label: 'Model',          from: '#f5f3ff', to: '#ede9fe', border: 'border-purple-200', text: 'text-purple-700' },
+  { value: 'Urdu NLP',    label: 'Language',        from: '#ecfeff', to: '#cffafe', border: 'border-cyan-200',   text: 'text-cyan-700' },
+  { value: '94.7%',       label: 'Accuracy',        from: '#f0fdf4', to: '#dcfce7', border: 'border-emerald-200',text: 'text-emerald-700' },
+  { value: 'CPU Only',    label: 'No GPU Needed',   from: '#fff7ed', to: '#ffedd5', border: 'border-amber-200',  text: 'text-amber-700' },
+]
 
+export default function HeroSection() {
+  const [idx, setIdx] = useState(0)
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTypedIndex((i) => (i + 1) % TYPING_TEXTS.length)
-    }, 3000)
-    return () => clearInterval(interval)
+    const t = setInterval(() => setIdx((i) => (i + 1) % TYPING_TEXTS.length), 3000)
+    return () => clearInterval(t)
   }, [])
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 pt-16 overflow-hidden">
+    <section className="relative min-h-screen hero-mesh flex flex-col items-center justify-center text-center px-4 pt-20 pb-12 overflow-hidden">
+
       {/* Trust badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs text-slate-300 mb-8 border border-purple-500/20">
-        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-        <span>xlm-RoBERTa · Fine-tuned · CPU-Powered</span>
+      <div className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-purple-200 shadow-sm shadow-purple-100 text-xs font-semibold text-purple-700 mb-8">
+        <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+        xlm-RoBERTa · Fine-tuned on Urdu News · CPU-Powered
       </div>
 
-      {/* Main heading */}
-      <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
-        <span className="gradient-text">SachAI</span>
-        <br />
-        <span className="text-white text-4xl sm:text-5xl lg:text-6xl">سچ کی پہچان</span>
+      {/* Heading */}
+      <h1 className="relative z-10 font-black leading-tight tracking-tight mb-6">
+        <span className="block text-6xl sm:text-7xl lg:text-8xl gradient-text">Verdade</span>
+        <span className="block text-4xl sm:text-5xl lg:text-6xl text-slate-800 mt-2">سچ کی پہچان</span>
       </h1>
 
-      {/* Animated Urdu subheading */}
-      <p className="urdu text-2xl sm:text-3xl text-slate-300 mb-4 min-h-[3rem]">
-        <span className="typing">{TYPING_TEXTS[typedIndex]}</span>
+      {/* Animated subtitle */}
+      <p className="relative z-10 urdu text-2xl sm:text-3xl font-bold text-purple-700 min-h-[3.5rem] mb-4">
+        <span className="typing">{TYPING_TEXTS[idx]}</span>
       </p>
 
-      <p className="text-slate-400 max-w-xl mb-10 leading-relaxed">
-        AI-powered Urdu fake news detection. Paste any Urdu article and get an
-        instant authenticity verdict powered by{' '}
-        <span className="text-purple-400">xlm-RoBERTa</span>.
+      <p className="relative z-10 text-slate-500 max-w-lg mb-10 leading-relaxed text-base">
+        Paste any Urdu news article and get an instant authenticity verdict
+        powered by fine-tuned{' '}
+        <span className="font-semibold text-purple-600">xlm-RoBERTa</span>.
       </p>
 
-      {/* CTA buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
+      {/* CTA */}
+      <div className="relative z-10 flex flex-col sm:flex-row gap-4 items-center mb-16">
         <a
           href="#detector"
-          className="btn-primary px-8 py-3.5 rounded-xl text-white font-semibold text-sm shadow-lg"
+          className="btn-primary px-9 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-purple-200 flex items-center gap-2.5"
         >
+          <Zap className="w-4 h-4" />
           Analyze News Now
         </a>
         <a
           href="#how-it-works"
-          className="px-8 py-3.5 rounded-xl glass border border-white/10 text-slate-300 font-semibold text-sm hover:border-purple-500/40 transition-colors"
+          className="px-9 py-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold text-sm hover:border-purple-300 hover:shadow-lg hover:shadow-purple-50 transition-all flex items-center gap-2.5"
         >
+          <Shield className="w-4 h-4 text-purple-500" />
           How It Works
         </a>
       </div>
 
       {/* Stat pills */}
-      <div className="flex flex-wrap gap-4 justify-center mt-14">
-        {[
-          { label: 'Model', value: 'xlm-RoBERTa' },
-          { label: 'Task', value: 'Classification' },
-          { label: 'Device', value: 'CPU' },
-          { label: 'Language', value: 'Urdu' },
-        ].map((s) => (
-          <div key={s.label} className="glass px-5 py-3 rounded-xl text-center">
-            <div className="text-lg font-bold gradient-text">{s.value}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-2xl">
+        {STATS.map((s) => (
+          <div
+            key={s.label}
+            className={`rounded-2xl border ${s.border} px-4 py-3.5 text-center shadow-sm`}
+            style={{ background: `linear-gradient(135deg, ${s.from}, ${s.to})` }}
+          >
+            <div className={`text-base font-extrabold ${s.text}`}>{s.value}</div>
+            <div className="text-xs text-slate-500 mt-0.5 font-medium">{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Scroll arrow */}
-      <a href="#detector" className="absolute bottom-8 animate-bounce text-slate-600">
+      {/* Scroll hint */}
+      <a href="#detector" className="absolute bottom-8 z-10 animate-bounce text-purple-300 hover:text-purple-500 transition-colors">
         <ArrowDown className="w-5 h-5" />
       </a>
+
+      {/* Bottom divider */}
+      <div className="absolute bottom-0 left-0 right-0 divider-gradient" />
     </section>
   )
 }

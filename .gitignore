@@ -36,6 +36,9 @@ saved_model/
 *.db
 *.sqlite3
 
+# Dataset and result CSV files
+*.csv
+
 # Environment variables (keep .env.example files)
 .env
 .env.local

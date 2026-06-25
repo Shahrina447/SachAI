@@ -1,49 +1,40 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Search, RefreshCw, AlertTriangle, CheckCircle, HelpCircle, Zap } from 'lucide-react'
+import { Search, RefreshCw, AlertTriangle, CheckCircle, HelpCircle, Zap, Info } from 'lucide-react'
 import { analyzeNews, PredictResponse } from '@/lib/api'
 
-// ── Sample texts ──────────────────────────────────────────────────────────────
 const SAMPLES: Record<number, string> = {
   1: 'وفاقی حکومت نے اعلان کیا ہے کہ آئندہ مالی سال میں تعلیم کے بجٹ میں 25 فیصد اضافہ کیا جائے گا تاکہ تعلیمی معیار کو بہتر بنایا جا سکے۔',
   2: 'سائنسدانوں نے دعویٰ کیا ہے کہ صرف ایک گلاس گرم پانی میں لیموں نچوڑ کر پینے سے کینسر مکمل طور پر ختم ہو جاتا ہے اور یہ راز حکومت چھپا رہی ہے!',
   3: 'موسمیاتی تبدیلیوں کے باعث پاکستان میں موسمِ گرما کا دورانیہ بڑھنے کا امکان ہے، محکمہ موسمیات نے انتباہ جاری کر دیا ہے۔',
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function badgeClass(prediction: string) {
-  if (prediction === 'REAL') return 'badge-real'
-  if (prediction === 'FAKE') return 'badge-fake'
-  return 'badge-mixed'
+function badgeClass(p: string) {
+  return p === 'REAL' ? 'badge-real' : p === 'FAKE' ? 'badge-fake' : 'badge-mixed'
+}
+function VerdictIcon({ p }: { p: string }) {
+  if (p === 'REAL') return <CheckCircle className="w-7 h-7 text-emerald-600" />
+  if (p === 'FAKE') return <AlertTriangle className="w-7 h-7 text-red-500" />
+  return <HelpCircle className="w-7 h-7 text-amber-500" />
 }
 
-function verdictIcon(prediction: string) {
-  if (prediction === 'REAL') return <CheckCircle className="w-5 h-5 text-emerald-400" />
-  if (prediction === 'FAKE') return <AlertTriangle className="w-5 h-5 text-red-400" />
-  return <HelpCircle className="w-5 h-5 text-amber-400" />
-}
-function ProgressBar({ label, value, color }: { label: string; value: number; color: string }) {
-  const [width, setWidth] = useState(0)
-  useEffect(() => {
-    const t = setTimeout(() => setWidth(Math.round(value * 100)), 300)
-    return () => clearTimeout(t)
-  }, [value])
-
+function Bar({ label, value, color }: { label: string; value: number; color: string }) {
+  const [w, setW] = useState(0)
+  useEffect(() => { const t = setTimeout(() => setW(Math.round(value * 100)), 350); return () => clearTimeout(t) }, [value])
   return (
     <div className="space-y-1.5">
-      <div className="flex justify-between text-xs text-slate-400">
+      <div className="flex justify-between text-xs font-semibold text-slate-500">
         <span>{label}</span>
-        <span className="font-semibold" style={{ color }}>{Math.round(value * 100)}%</span>
+        <span style={{ color }}>{Math.round(value * 100)}%</span>
       </div>
       <div className="progress-bar">
-        <div style={{ width: `${width}%`, background: color }} />
+        <div style={{ width: `${w}%`, background: color }} />
       </div>
     </div>
   )
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
 export default function DetectorSection() {
   const [text, setText] = useState('')
   const [state, setState] = useState<'idle' | 'loading' | 'result'>('idle')
@@ -51,219 +42,180 @@ export default function DetectorSection() {
   const [error, setError] = useState<string | null>(null)
   const meterRef = useRef<HTMLDivElement>(null)
 
-  // Animate conic-gradient meter when result arrives
   useEffect(() => {
     if (state === 'result' && result && meterRef.current) {
       const pct = Math.round(result.confidence_real * 100)
-      const color =
-        result.prediction === 'REAL'
-          ? '#10b981'
-          : '#ef4444'
-      // Small delay so CSS transition fires
+      const color = result.prediction === 'REAL' ? '#059669' : '#dc2626'
       setTimeout(() => {
-        if (meterRef.current) {
-          meterRef.current.style.setProperty('--p', String(pct))
-          meterRef.current.style.setProperty('--meter-color', color)
-        }
-      }, 100)
+        meterRef.current?.style.setProperty('--p', String(pct))
+        meterRef.current?.style.setProperty('--meter-color', color)
+      }, 120)
     }
   }, [state, result])
 
   const handleAnalyze = async () => {
     if (!text.trim() || text.trim().length < 10) return
-    setState('loading')
-    setError(null)
-
-    // Minimum 2.2 s loading for UX polish
-    const [apiResult] = await Promise.allSettled([
-      analyzeNews(text),
-      new Promise((r) => setTimeout(r, 2200)),
-    ])
-
-    if (apiResult.status === 'fulfilled') {
-      setResult(apiResult.value)
-      setState('result')
-    } else {
-      setError('Backend unreachable. Please ensure the server is running on port 8000.')
+    setState('loading'); setError(null)
+    const [res] = await Promise.allSettled([analyzeNews(text), new Promise(r => setTimeout(r, 800))])
+    if (res.status === 'fulfilled') { setResult(res.value); setState('result') }
+    else {
+      setError(res.reason instanceof Error ? res.reason.message : 'Backend unreachable. Ensure server is running on port 8000.')
       setState('idle')
     }
   }
-
-  const handleReset = () => {
-    setState('idle')
-    setResult(null)
-    setError(null)
-    setText('')
-  }
-
-  const charCount = text.length
+  const handleReset = () => { setState('idle'); setResult(null); setError(null); setText('') }
+  const chars = text.length
 
   return (
-    <section id="detector" className="relative py-24 px-4">
+    <section id="detector" className="relative py-28 px-4 section-soft">
       <div className="max-w-4xl mx-auto">
-        {/* Section header */}
+        {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs text-purple-300 mb-4 border border-purple-500/20">
-            <Zap className="w-3.5 h-3.5" />
-            <span>AI-Powered Detection</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-xs font-bold text-purple-700 mb-4">
+            <Zap className="w-3.5 h-3.5" /> AI-Powered Detection
+          </span>
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-800 mb-3">
             Detect Fake <span className="gradient-text">Urdu News</span>
           </h2>
-          <p className="urdu text-slate-400 text-xl">اردو خبر یہاں پیسٹ کریں</p>
+          <p className="urdu text-slate-500 text-xl">اردو خبر یہاں پیسٹ کریں</p>
         </div>
 
-        {/* Card */}
-        <div className="glass rounded-2xl p-6 sm:p-8 glow">
-          {/* ── IDLE / INPUT STATE ── */}
+        {/* Main card */}
+        <div className="bg-white rounded-3xl p-7 sm:p-10 glow border border-purple-100">
+
+          {/* ── INPUT / LOADING ── */}
           {state !== 'result' && (
             <>
-              {/* Sample text buttons */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs text-slate-500 self-center">Samples:</span>
-                {[1, 2, 3].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setText(SAMPLES[n])}
-                    className="px-3 py-1 rounded-lg glass text-xs text-slate-300 hover:border-purple-500/40 border border-white/5 transition-colors"
-                  >
+              {/* Sample buttons */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                <span className="text-xs font-semibold text-slate-400 self-center mr-1">Try:</span>
+                {([1, 2, 3] as const).map(n => (
+                  <button key={n} onClick={() => setText(SAMPLES[n])}
+                    className="px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all">
                     Sample {n}
                   </button>
                 ))}
               </div>
 
               {/* Textarea */}
-              <div className="relative">
+              <div className="relative mb-1">
                 <textarea
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  rows={6}
-                  dir="rtl"
+                  onChange={e => setText(e.target.value)}
+                  rows={6} dir="rtl"
                   placeholder="یہاں اردو خبر کا متن پیسٹ کریں..."
-                  className="w-full urdu bg-transparent border border-white/10 rounded-xl px-4 py-3 text-slate-200 placeholder:text-slate-600 text-lg resize-none focus:outline-none focus:border-purple-500/50 transition-colors"
+                  className="w-full urdu bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-800 placeholder:text-slate-400 text-lg resize-none focus:border-purple-400 focus:bg-white transition-all"
                 />
-                <div className="absolute bottom-3 left-3 text-xs text-slate-600">
-                  {charCount}/1000
-                </div>
+                <span className={`absolute bottom-4 left-4 text-xs font-semibold transition-colors ${chars > 900 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {chars}/1000
+                </span>
               </div>
 
-              {/* Analyze button */}
+              {error && (
+                <div className="mt-4 flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  {error}
+                </div>
+              )}
+
               <button
                 onClick={handleAnalyze}
-                disabled={state === 'loading' || charCount < 10}
-                className="mt-4 w-full btn-primary px-6 py-3.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={state === 'loading' || chars < 10}
+                className="mt-5 w-full btn-primary py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-purple-200"
               >
-                {state === 'loading' ? (
-                  <>
-                    <div className="loader !w-5 !h-5 !border-2" />
-                    <span>Analyzing…</span>
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-4 h-4" />
-                    <span>Analyze News</span>
-                  </>
-                )}
+                {state === 'loading'
+                  ? <><div className="loader !w-5 !h-5 !border-2 !border-white/30 !border-t-white" /> Analyzing…</>
+                  : <><Search className="w-4.5 h-4.5" /> Analyze News</>}
               </button>
 
-              {/* Loading overlay with scan line */}
               {state === 'loading' && (
-                <div className="relative mt-6 glass rounded-xl h-20 overflow-hidden flex items-center justify-center">
+                <div className="relative mt-5 bg-purple-50 border border-purple-100 rounded-2xl h-14 overflow-hidden flex items-center justify-center">
                   <div className="scan-line" />
-                  <p className="text-xs text-slate-500 z-10">
-                    Running xlm-RoBERTa inference…
-                  </p>
+                  <p className="text-xs font-semibold text-purple-500 z-10">Running xlm-RoBERTa inference…</p>
                 </div>
               )}
             </>
           )}
 
-          {/* ── RESULT STATE ── */}
+          {/* ── RESULT ── */}
           {state === 'result' && result && (
-            <div className="space-y-8">
+            <div className="space-y-6">
 
-              {/* Top row: meter + verdict */}
-              <div className="flex flex-col sm:flex-row items-center gap-8">
-                {/* Circular credibility meter */}
-                <div className="flex-shrink-0 relative">
-                  <div
-                    ref={meterRef}
-                    id="credibility-meter"
-                    className="meter-bg w-36 h-36 rounded-full flex items-center justify-center"
-                    style={{ '--p': '0', '--meter-color': '#10b981' } as React.CSSProperties}
-                  >
-                    <div className="w-24 h-24 rounded-full bg-[#0b1020] flex flex-col items-center justify-center">
-                      <span className="text-2xl font-extrabold text-white">
-                        {Math.round(result.confidence_real * 100)}%
-                      </span>
-                      <span className="text-[10px] text-slate-500 mt-0.5">Credibility</span>
-                    </div>
+              {/* Verdict row */}
+              <div className={`flex flex-col sm:flex-row items-center gap-7 p-6 rounded-2xl border ${result.prediction === 'REAL' ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100' : 'bg-gradient-to-br from-red-50 to-white border-red-100'}`}>
+                {/* Meter */}
+                <div
+                  ref={meterRef}
+                  className="meter-bg w-36 h-36 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg"
+                  style={{ '--p': '0', '--meter-color': '#059669' } as React.CSSProperties}
+                >
+                  <div className="w-24 h-24 rounded-full bg-white flex flex-col items-center justify-center shadow-inner">
+                    <span className="text-2xl font-black text-slate-800">{Math.round(result.confidence_real * 100)}%</span>
+                    <span className="text-[10px] font-semibold text-slate-400 mt-0.5">Credibility</span>
                   </div>
                 </div>
 
-                {/* Verdict */}
+                {/* Text */}
                 <div className="flex-1 text-center sm:text-left space-y-3">
-                  <div className="flex items-center gap-3 justify-center sm:justify-start">
-                    {verdictIcon(result.prediction)}
-                    <span
-                      className={`text-2xl font-extrabold ${
-                        result.prediction === 'REAL'
-                          ? 'text-emerald-400'
-                          : 'text-red-400'
-                      }`}
-                    >
+                  <div className="flex items-center gap-3 justify-center sm:justify-start flex-wrap">
+                    <VerdictIcon p={result.prediction} />
+                    <span className={`text-3xl font-black ${result.prediction === 'REAL' ? 'text-emerald-600' : 'text-red-600'}`}>
                       {result.prediction}
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeClass(result.prediction)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeClass(result.prediction)}`}>
                       {Math.round(result.confidence * 100)}% confidence
                     </span>
                   </div>
-                  <p className="text-slate-300 text-sm leading-relaxed">{result.verdict_text}</p>
-                  <div className="flex gap-6 text-xs text-slate-500">
-                    <span>Real: <span className="text-emerald-400 font-semibold">{Math.round(result.confidence_real * 100)}%</span></span>
-                    <span>Fake: <span className="text-red-400 font-semibold">{Math.round(result.confidence_fake * 100)}%</span></span>
+                  <p className="text-slate-600 text-sm leading-relaxed font-medium">{result.verdict_text}</p>
+
+                  {/* Warning for sophisticated fakes */}
+                  {result.prediction === 'REAL' && result.confidence_real > 0.85 && (
+                    <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700 leading-relaxed">
+                        <strong>Note:</strong> This model detects language patterns, not factual truth.
+                        Formally-written misinformation may not be caught. Always verify with a trusted source.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-5 text-xs font-semibold">
+                    <span className="text-slate-400">Real: <span className="text-emerald-600">{Math.round(result.confidence_real * 100)}%</span></span>
+                    <span className="text-slate-400">Fake: <span className="text-red-500">{Math.round(result.confidence_fake * 100)}%</span></span>
                   </div>
                 </div>
               </div>
 
-              {/* 4 breakdown scores — removed: these were not real model outputs */}
-
-              {/* Confidence breakdown */}
-              <div className="glass rounded-xl p-5 space-y-4">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                  Confidence Breakdown
-                </h4>
-                <ProgressBar
-                  label="Real News Probability"
-                  value={result.confidence_real}
-                  color="#34d399"
-                />
-                <ProgressBar
-                  label="Fake News Probability"
-                  value={result.confidence_fake}
-                  color="#f87171"
-                />
+              {/* Confidence bars */}
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-4">
+                <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Confidence Breakdown</h4>
+                <Bar label="Real News Probability" value={result.confidence_real} color="#059669" />
+                <Bar label="Fake News Probability" value={result.confidence_fake} color="#dc2626" />
               </div>
 
-              {/* Analyzed text preview */}
-              <div className="glass rounded-xl p-4">
-                <p className="text-xs text-slate-500 mb-2">Analyzed text:</p>
-                <p className="urdu text-slate-300 text-sm line-clamp-3">{text}</p>
+              {/* Model note */}
+              <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-blue-50 border border-blue-100">
+                <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  <strong>How it works:</strong> The model analyzes <em>writing style and language patterns</em> — not whether facts are true.
+                  It excels at detecting sensational or clearly fabricated content. For formally-written misinformation, always cross-check.
+                </p>
+              </div>
+
+              {/* Text preview */}
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Analyzed text</p>
+                <p className="urdu text-slate-700 text-sm line-clamp-3">{text}</p>
               </div>
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button
-                  onClick={handleReset}
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl glass border border-white/10 text-slate-300 text-sm font-medium hover:border-purple-500/30 transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Analyze Another
+                <button onClick={handleReset}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white border border-slate-200 text-slate-600 text-sm font-bold hover:border-purple-300 hover:text-purple-700 transition-colors">
+                  <RefreshCw className="w-4 h-4" /> Analyze Another
                 </button>
-                <a
-                  href="/history"
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl btn-primary text-white text-sm font-medium"
-                >
+                <a href="/history"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl btn-primary text-sm font-bold shadow-md shadow-purple-100">
                   View History
                 </a>
               </div>

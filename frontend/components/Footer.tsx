@@ -1,47 +1,60 @@
-import { Brain } from 'lucide-react'
+import { Brain, Heart } from 'lucide-react'
+
+const LINKS = [
+  { href: '#detector',     label: 'Detector' },
+  { href: '#how-it-works', label: 'How It Works' },
+  { href: '#features',     label: 'Features' },
+  { href: '/history',      label: 'History' },
+  { href: 'https://arxiv.org/abs/2403.14037', label: 'Dataset Paper', external: true },
+]
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/5 py-10 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl btn-primary flex items-center justify-center">
-              <Brain className="w-4 h-4 text-white" />
+    <footer className="bg-white border-t border-slate-200">
+      {/* Top gradient stripe */}
+      <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #7c3aed, #06b6d4, #059669, #ec4899, #7c3aed)' }} />
+
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
+          {/* Brand */}
+          <div className="flex flex-col items-center sm:items-start gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl btn-primary flex items-center justify-center shadow-md shadow-purple-200">
+                <Brain className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-black gradient-text">Verdade</span>
             </div>
-            <span className="text-lg font-bold gradient-text">SachAI</span>
+            <p className="text-xs text-slate-400 font-medium">Urdu Fake News Detection · Semester Project</p>
           </div>
 
           {/* Links */}
-          <div className="flex flex-wrap gap-6 text-sm text-slate-500 justify-center">
-            <a href="#detector" className="hover:text-slate-300 transition-colors">Detector</a>
-            <a href="#how-it-works" className="hover:text-slate-300 transition-colors">How It Works</a>
-            <a href="#features" className="hover:text-slate-300 transition-colors">Features</a>
-            <a href="/history" className="hover:text-slate-300 transition-colors">History</a>
-            <a
-              href="https://arxiv.org/abs/2403.14037"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-300 transition-colors"
-            >
-              Dataset Paper
-            </a>
-          </div>
+          <nav className="flex flex-wrap gap-1 justify-center">
+            {LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                target={l.external ? '_blank' : undefined}
+                rel={l.external ? 'noopener noreferrer' : undefined}
+                className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
 
-          {/* Copyright */}
-          <p className="text-xs text-slate-600 text-center sm:text-right">
-            SachAI · Semester Project
-            <br />
-            xlm-RoBERTa · CPU-Only · Urdu NLP
-          </p>
+          {/* Badge */}
+          <div className="text-xs text-slate-400 text-center sm:text-right space-y-1">
+            <div className="font-semibold text-slate-600">xlm-RoBERTa · CPU-Only · Urdu NLP</div>
+            <div>94.7% accuracy on real-world data</div>
+          </div>
         </div>
 
-        {/* Bottom note */}
-        <div className="mt-8 pt-6 border-t border-white/5 text-center text-xs text-slate-700">
-          Built with Next.js 14 · FastAPI · HuggingFace Transformers · PyTorch CPU
-          <br />
-          Dataset: Ax-to-Grind Urdu (arXiv:2403.14037) · Bend the Truth (MaazAmjad/GitHub)
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-400 space-y-1.5">
+          <p>Built with Next.js 14 · FastAPI · HuggingFace Transformers · PyTorch CPU</p>
+          <p>Dataset: Ax-to-Grind Urdu (arXiv:2403.14037) · Bend the Truth (MaazAmjad/GitHub)</p>
+          <p className="flex items-center justify-center gap-1 text-slate-300 pt-1">
+            Made with <Heart className="w-3 h-3 text-pink-400 fill-pink-400" /> for Urdu NLP
+          </p>
         </div>
       </div>
     </footer>
