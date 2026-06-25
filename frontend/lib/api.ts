@@ -3,7 +3,7 @@ import axios from 'axios'
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 export interface PredictResponse {
-  prediction: 'FAKE' | 'REAL'
+  prediction:          'FAKE' | 'REAL' | 'UNCERTAIN'
   confidence: number
   confidence_real: number
   confidence_fake: number

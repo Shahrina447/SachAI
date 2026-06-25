@@ -1,11 +1,10 @@
-import { Brain, Heart } from 'lucide-react'
+import { Brain } from 'lucide-react'
 
 const LINKS = [
   { href: '#detector',     label: 'Detector' },
   { href: '#how-it-works', label: 'How It Works' },
   { href: '#features',     label: 'Features' },
   { href: '/history',      label: 'History' },
-  { href: 'https://arxiv.org/abs/2403.14037', label: 'Dataset Paper', external: true },
 ]
 
 export default function Footer() {
@@ -33,8 +32,6 @@ export default function Footer() {
               <a
                 key={l.href}
                 href={l.href}
-                target={l.external ? '_blank' : undefined}
-                rel={l.external ? 'noopener noreferrer' : undefined}
                 className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-purple-700 hover:bg-purple-50 transition-colors"
               >
                 {l.label}
@@ -49,12 +46,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-400 space-y-1.5">
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
           <p>Built with Next.js 14 · FastAPI · HuggingFace Transformers · PyTorch CPU</p>
-          <p>Dataset: Ax-to-Grind Urdu (arXiv:2403.14037) · Bend the Truth (MaazAmjad/GitHub)</p>
-          <p className="flex items-center justify-center gap-1 text-slate-300 pt-1">
-            Made with <Heart className="w-3 h-3 text-pink-400 fill-pink-400" /> for Urdu NLP
-          </p>
         </div>
       </div>
     </footer>

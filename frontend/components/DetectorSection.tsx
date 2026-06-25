@@ -18,7 +18,6 @@ function VerdictIcon({ p }: { p: string }) {
   if (p === 'FAKE') return <AlertTriangle className="w-7 h-7 text-red-500" />
   return <HelpCircle className="w-7 h-7 text-amber-500" />
 }
-
 function Bar({ label, value, color }: { label: string; value: number; color: string }) {
   const [w, setW] = useState(0)
   useEffect(() => { const t = setTimeout(() => setW(Math.round(value * 100)), 350); return () => clearTimeout(t) }, [value])
@@ -44,8 +43,8 @@ export default function DetectorSection() {
 
   useEffect(() => {
     if (state === 'result' && result && meterRef.current) {
-      const pct = Math.round(result.confidence_real * 100)
-      const color = result.prediction === 'REAL' ? '#059669' : '#dc2626'
+      const pct   = Math.round(result.confidence_real * 100)
+      const color = result.prediction === 'REAL' ? '#059669' : result.prediction === 'FAKE' ? '#dc2626' : '#d97706'
       setTimeout(() => {
         meterRef.current?.style.setProperty('--p', String(pct))
         meterRef.current?.style.setProperty('--meter-color', color)
@@ -142,7 +141,11 @@ export default function DetectorSection() {
             <div className="space-y-6">
 
               {/* Verdict row */}
-              <div className={`flex flex-col sm:flex-row items-center gap-7 p-6 rounded-2xl border ${result.prediction === 'REAL' ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100' : 'bg-gradient-to-br from-red-50 to-white border-red-100'}`}>
+              <div className={`flex flex-col sm:flex-row items-center gap-7 p-6 rounded-2xl border ${
+                result.prediction === 'REAL'      ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100' :
+                result.prediction === 'FAKE'      ? 'bg-gradient-to-br from-red-50 to-white border-red-100' :
+                                                    'bg-gradient-to-br from-amber-50 to-white border-amber-100'
+              }`}>
                 {/* Meter */}
                 <div
                   ref={meterRef}
@@ -159,7 +162,11 @@ export default function DetectorSection() {
                 <div className="flex-1 text-center sm:text-left space-y-3">
                   <div className="flex items-center gap-3 justify-center sm:justify-start flex-wrap">
                     <VerdictIcon p={result.prediction} />
-                    <span className={`text-3xl font-black ${result.prediction === 'REAL' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <span className={`text-3xl font-black ${
+                      result.prediction === 'REAL' ? 'text-emerald-600' :
+                      result.prediction === 'FAKE' ? 'text-red-600' :
+                      'text-amber-600'
+                    }`}>
                       {result.prediction}
                     </span>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeClass(result.prediction)}`}>
@@ -191,6 +198,33 @@ export default function DetectorSection() {
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Confidence Breakdown</h4>
                 <Bar label="Real News Probability" value={result.confidence_real} color="#059669" />
                 <Bar label="Fake News Probability" value={result.confidence_fake} color="#dc2626" />
+              </div>
+
+              {/* Model performance metrics */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Model Performance</h4>
+                  <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    Evaluated on 400 samples
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Accuracy',  value: '94.5%', color: '#7c3aed', bg: 'from-purple-50 to-purple-100/40', border: 'border-purple-200', desc: '378 / 400 correct' },
+                    { label: 'Precision', value: '97.3%', color: '#0891b2', bg: 'from-cyan-50 to-cyan-100/40',    border: 'border-cyan-200',   desc: 'Low false alarms' },
+                    { label: 'Recall',    value: '91.5%', color: '#059669', bg: 'from-emerald-50 to-emerald-100/40', border: 'border-emerald-200', desc: 'Fake news caught' },
+                    { label: 'F1 Score',  value: '94.3%', color: '#d97706', bg: 'from-amber-50 to-amber-100/40',  border: 'border-amber-200',  desc: 'Balanced score' },
+                  ].map((m) => (
+                    <div
+                      key={m.label}
+                      className={`rounded-xl border ${m.border} px-3 py-3 text-center bg-gradient-to-b ${m.bg}`}
+                    >
+                      <div className="text-xl font-black mb-0.5" style={{ color: m.color }}>{m.value}</div>
+                      <div className="text-xs font-bold text-slate-700">{m.label}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{m.desc}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Model note */}
