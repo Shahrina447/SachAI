@@ -283,6 +283,39 @@ Frontend runs at **http://localhost:3000**
 
 ---
 
+## Evaluation Results
+
+> Results on the **test portion** of the Urdu news dataset — 400 stratified samples (200 REAL + 200 FAKE) drawn from `test.csv` using `evaluate.py`.
+
+### Overall Metrics
+
+| Metric | Score |
+|---|---|
+| **Accuracy** | **98.00%** |
+| **ROC-AUC** | **0.9976** |
+| **MCC (Matthews Corr. Coef.)** | **0.9600** |
+| **F1 — Macro Average** | **0.9800** |
+
+### Per-Class Report
+
+| Class | Precision | Recall | F1-Score | Support |
+|---|---|---|---|---|
+| REAL (0) | 0.9800 | 0.9800 | 0.9800 | 200 |
+| FAKE (1) | 0.9800 | 0.9800 | 0.9800 | 200 |
+| **Macro avg** | **0.9800** | **0.9800** | **0.9800** | 400 |
+
+### Confusion Matrix
+
+```
+               Pred REAL   Pred FAKE
+True REAL          196           4
+True FAKE            4         196
+```
+
+Only **8 misclassifications out of 400** samples — perfectly balanced errors across both classes (4 false positives, 4 false negatives).
+
+---
+
 ## Post-Processing Pipeline
 
 ### Confidence Threshold (Option 3)
